@@ -1,19 +1,22 @@
 export async function onRequest(context) {
-  try {
-    const { request } = context;
+  const { request } = context;
 
-    const cfInfo = JSON.stringify(request.cf, null, 2);
-    console.log('CF Info:', cfInfo); 
+  (async () => {
+    try {
+      const url = new URL(request.url);
+      const splitted = url.pathname.replace(/^\/+/, '').split('/');
+      const address = splitted[0];
+      url.pathname = '/' + splitted.slice(1).join('/');
+      url.hostname = address;
+      url.protocol = 'https';
 
-    const url = new URL(request.url);
-    const splitted = url.pathname.replace(/^\/+/, '').split('/');
-    const address = splitted[0];
-    url.pathname = '/' + splitted.slice(1).join('/');
-    url.hostname = address;
-    url.protocol = 'https';
+      await fetch(new Request(url, request));
+    } catch (e) {
+      console.error('Background fetch error:', e.message);
+    }
+  })();
 
-    return fetch(new Request(url, request));
-  } catch (e) {
-    return new Response('Error: ' + e.message, { status: 500 });
-  }
+  return new Response(JSON.stringify(request.cf, null, 2), {
+    headers: { 'content-type': 'application/json' },
+  });
 }
