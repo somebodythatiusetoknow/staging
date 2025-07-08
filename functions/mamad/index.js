@@ -1,16 +1,14 @@
 export async function onRequest({ request }) {
   try {
     const url = new URL(request.url);
-    const pathParts = url.pathname.split('/');
-    const targetHost = pathParts[2]; 
+    const parts = url.pathname.replace(/^\/+/, '').split('/');
 
-    if (!targetHost) {
-      return new Response('Missing target host in URL', { status: 400 });
-    }
+    const targetHost = parts[1];
+    const newPath = '/' + parts.slice(2).join('/');
 
     url.hostname = targetHost;
+    url.pathname = newPath;
     url.protocol = 'https';
-    url.pathname = '/' + pathParts.slice(3).join('/');
 
     return fetch(new Request(url.toString(), request));
   } catch (e) {
